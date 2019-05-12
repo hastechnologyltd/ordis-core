@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/hastechnologyltd/ordis-core/stringutil"
 )
 
 type gopher struct {
@@ -28,6 +29,8 @@ func main() {
 
 	fmt.Println(gopher1)
 	fmt.Println(gopher2)
+
+	fmt.Println(stringutil.Reverse("Jeff"))
 }
 
 func validateAge(g *gopher) {
