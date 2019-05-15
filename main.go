@@ -1,8 +1,11 @@
 package main
 
 import (
+	"container/list"
 	"fmt"
 	"github.com/hastechnologyltd/ordis-core/stringutil"
+	"github.com/sony/sonyflake"
+	"time"
 )
 
 type gopher struct {
@@ -31,6 +34,26 @@ func main() {
 	fmt.Println(gopher2)
 
 	fmt.Println(stringutil.Reverse("Jeff"))
+
+	var setupTime = time.Date(2015, 10, 4, 20, 34, 58, 651387237, time.UTC)
+
+	var st sonyflake.Settings
+	st.StartTime = setupTime
+	fmt.Println(st.StartTime)
+	var sf = sonyflake.NewSonyflake(st)
+	fmt.Println(sf)
+
+	var id, _ = sf.NextID()
+	fmt.Println(id)
+
+	var decomp = sonyflake.Decompose(id)
+	fmt.Println(decomp)
+
+	gopherList := list.New()
+	gopherList.PushBack(gopher1)
+	gopherList.PushBack(gopher2)
+
+	fmt.Println(gopherList.Front().Value)
 }
 
 func validateAge(g *gopher) {
