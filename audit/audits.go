@@ -27,8 +27,6 @@ func (audits *Audits) AddAudit(data string) {
 		currentNode.next = element
 		audits.tail = element
 	}
-
-	fmt.Printf("%+v\n", audits.tail)
 }
 
 func (audits *Audits) Display() {
