@@ -2,13 +2,12 @@ package communicate
 
 import (
 	"github.com/gansidui/gotcp"
-	"github.com/gansidui/gotcp/examples/echo"
 	"log"
 	"net"
 	"strconv"
 )
 
-func server(addressPort int, protocol gotcp.Protocol) {
+func server(addressPort int, callback gotcp.ConnCallback, protocol gotcp.Protocol) {
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", ":"+strconv.Itoa(addressPort))
 	checkError(err)
@@ -19,7 +18,7 @@ func server(addressPort int, protocol gotcp.Protocol) {
 		PacketSendChanLimit:    20,
 		PacketReceiveChanLimit: 20,
 	}
-	srv := gotcp.NewServer(config, &Callback{}, protocol)
+	srv := gotcp.NewServer(config, callback, protocol)
 }
 
 func checkError(err error) {
