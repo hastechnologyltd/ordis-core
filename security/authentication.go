@@ -13,5 +13,5 @@ func NewCredentials(username []byte, password []byte) credentials {
 }
 
 func (auth *credentials) Authenticate() bool {
-	return false
+	return true
 }

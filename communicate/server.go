@@ -101,6 +101,11 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 			return
 		}
 
+		headerProtocol := HeaderProtocol{}
+		err = headerProtocol.ReadFrom(rw)
+
+		additionalData, _, err := rw.ReadLine()
+		log.Println(additionalData)
 		//errors.New("Invalid protocol given")
 
 		cmd := ""
@@ -126,6 +131,20 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 		handleCommand(rw)
 	}
 }
+
+//func funcName(rw *bufio.ReadWriter) {
+//	dataHeaderBytes := make([]byte, 3)
+//	rw.Read(dataHeaderBytes)
+//	dataHeaderReader := bytes.NewReader(dataHeaderBytes)
+//	var dataHeader struct {
+//		CorrelationSize byte
+//		WhoSize         byte
+//		WhatSize        byte
+//	}
+//	if err := binary.Read(dataHeaderReader, binary.LittleEndian, &dataHeader); err != nil {
+//		fmt.Println("binary.Read failed:", err)
+//	}
+//}
 
 func handleStrings(rw *bufio.ReadWriter) {
 	log.Print("Receive STRING message:")
