@@ -2,14 +2,12 @@ package communicate
 
 import (
 	"bufio"
-	"encoding/gob"
 	"github.com/hastechnologyltd/ordis-core/security"
 	"github.com/pkg/errors"
 	"io"
 	"log"
 	"net"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -19,13 +17,20 @@ type server struct {
 	endpoint *Endpoint
 }
 
+const (
+	AdminCommand = 0xf0
+	ReadCommand  = 0x10
+	WriteCommand = 0x20
+)
+
 func NewServer(port int) server {
 	server := server{
 		endpoint: NewEndpoint(port),
 	}
 
-	server.endpoint.AddHandleFunc("STRING", handleStrings)
-	server.endpoint.AddHandleFunc("GOB", handleGob)
+	server.endpoint.AddHandleFunc(AdminCommand, handleAdminCommand)
+	server.endpoint.AddHandleFunc(ReadCommand, handleReadCommand)
+	server.endpoint.AddHandleFunc(WriteCommand, handleWriteCommand)
 	return server
 }
 
@@ -48,33 +53,25 @@ func (s *server) Listen() error {
 	}
 }
 
-type complexData struct {
-	N int
-	S string
-	M map[string]int
-	P []byte
-	C *complexData
-}
-
 type HandleFunc func(*bufio.ReadWriter)
 
 type Endpoint struct {
 	listener    net.Listener
-	handler     map[string]HandleFunc
+	handler     map[byte]HandleFunc
 	m           sync.RWMutex
 	portAddress string
 }
 
 func NewEndpoint(port int) *Endpoint {
 	return &Endpoint{
-		handler:     map[string]HandleFunc{},
+		handler:     map[byte]HandleFunc{},
 		portAddress: ":" + strconv.Itoa(port),
 	}
 }
 
-func (e *Endpoint) AddHandleFunc(name string, f HandleFunc) {
+func (e *Endpoint) AddHandleFunc(command byte, f HandleFunc) {
 	e.m.Lock()
-	e.handler[name] = f
+	e.handler[command] = f
 	e.m.Unlock()
 }
 
@@ -108,29 +105,46 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 		log.Println(additionalData)
 		//errors.New("Invalid protocol given")
 
-		cmd := ""
 		//cmd, err := rw.ReadString('\n')
 		switch {
 		case err == io.EOF:
 			log.Println("Reached EOF - close this connection.\n   ---")
 			return
 		case err != nil:
-			log.Println("\nError reading command. Got: '"+cmd+"'\n", err)
+			log.Println("\nError reading command. Got: '"+string(command)+"'\n", err)
 			return
 		}
 
-		cmd = strings.Trim(cmd, "\n ")
-		log.Println(cmd + "'-")
 		e.m.RLock()
-		handleCommand, ok := e.handler[cmd]
+		handleCommand, ok := e.handler[command]
 		e.m.RUnlock()
 		if !ok {
-			log.Println("Command '" + cmd + "' is not registered.")
+			log.Println("Command '" + string(command) + "' is not registered.")
 			return
 		}
 		handleCommand(rw)
 	}
 }
+
+func handleAdminCommand(rw *bufio.ReadWriter) {
+
+}
+
+func handleReadCommand(rw *bufio.ReadWriter) {
+
+}
+
+func handleWriteCommand(rw *bufio.ReadWriter) {
+
+}
+
+//type complexData struct {
+//	N int
+//	S string
+//	M map[string]int
+//	P []byte
+//	C *complexData
+//}
 
 //func funcName(rw *bufio.ReadWriter) {
 //	dataHeaderBytes := make([]byte, 3)
@@ -146,33 +160,33 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 //	}
 //}
 
-func handleStrings(rw *bufio.ReadWriter) {
-	log.Print("Receive STRING message:")
-	s, err := rw.ReadString('\n')
-	if err != nil {
-		log.Println("Cannot read from connection.\n", err)
-	}
-	s = strings.Trim(s, "\n ")
-	log.Println(s)
-	_, err = rw.WriteString("Thank you.\n")
-	if err != nil {
-		log.Println("Cannot write to connection.\n", err)
-	}
-	err = rw.Flush()
-	if err != nil {
-		log.Println("Flush failed.", err)
-	}
-}
+//func handleStrings(rw *bufio.ReadWriter) {
+//	log.Print("Receive STRING message:")
+//	s, err := rw.ReadString('\n')
+//	if err != nil {
+//		log.Println("Cannot read from connection.\n", err)
+//	}
+//	s = strings.Trim(s, "\n ")
+//	log.Println(s)
+//	_, err = rw.WriteString("Thank you.\n")
+//	if err != nil {
+//		log.Println("Cannot write to connection.\n", err)
+//	}
+//	err = rw.Flush()
+//	if err != nil {
+//		log.Println("Flush failed.", err)
+//	}
+//}
 
-func handleGob(rw *bufio.ReadWriter) {
-	log.Print("Receive GOB data:")
-	var data complexData
-	dec := gob.NewDecoder(rw)
-	err := dec.Decode(&data)
-	if err != nil {
-		log.Println("Error decoding GOB data:", err)
-		return
-	}
-	log.Printf("Outer complexData struct: \n%#v\n", data)
-	log.Printf("Inner complexData struct: \n%#v\n", data.C)
-}
+//func handleGob(rw *bufio.ReadWriter) {
+//	log.Print("Receive GOB data:")
+//	var data complexData
+//	dec := gob.NewDecoder(rw)
+//	err := dec.Decode(&data)
+//	if err != nil {
+//		log.Println("Error decoding GOB data:", err)
+//		return
+//	}
+//	log.Printf("Outer complexData struct: \n%#v\n", data)
+//	log.Printf("Inner complexData struct: \n%#v\n", data.C)
+//}
