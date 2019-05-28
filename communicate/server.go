@@ -2,6 +2,7 @@ package communicate
 
 import (
 	"bufio"
+	"github.com/hastechnologyltd/ordis-core/communicate/protocol"
 	"github.com/hastechnologyltd/ordis-core/security"
 	"github.com/pkg/errors"
 	"io"
@@ -98,8 +99,8 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 			return
 		}
 
-		headerProtocol := HeaderProtocol{}
-		err = headerProtocol.ReadFrom(rw)
+		writeMessageProtocol := protocol.WriteMessageProtocol{}
+		err = writeMessageProtocol.ReadMessage(rw)
 
 		additionalData, _, err := rw.ReadLine()
 		log.Println(additionalData)
