@@ -5,30 +5,37 @@
 package main
 
 import (
-	"github.com/hastechnologyltd/ordis-core/communicate"
-	"github.com/pkg/errors"
+	"fmt"
+	"github.com/hastechnologyltd/ordis-core/messenger"
 	"log"
+	"time"
 )
 
 func main() {
-	//connect := flag.String("connect", "", "IP address of process to join. If empty, go into listen mode.")
-	//flag.Parse()
-	//if *connect != "" {
-	//	err := client(*connect)
-	//	if err != nil {
-	//		log.Println("Error:", errors.WithStack(err))
-	//	}
-	//	log.Println("Client done.")
-	//	return
+	//server := communicate.NewServer(48202)
+	//
+	//err := server.Listen()
+	//if err != nil {
+	//	log.Println("Error:", errors.WithStack(err))
 	//}
-	server := communicate.NewServer(48202)
+	//
+	//log.Println("Server done.")
 
-	err := server.Listen()
-	if err != nil {
-		log.Println("Error:", errors.WithStack(err))
+	messenger.NewMessenger()
+	go messenger.RetrieveMessage()
+
+	messenger.SendMessage(messenger.Message{"Hello"})
+	messenger.SendMessage(messenger.Message{"Jeff"})
+	messenger.SendMessage(messenger.Message{"Here is"})
+	messenger.SendMessage(messenger.Message{"a message"})
+
+	go messenger.Messenger()
+
+	for {
+		fmt.Println("Waiting...")
+		time.Sleep(1000)
 	}
 
-	log.Println("Server done.")
 }
 
 func init() {
